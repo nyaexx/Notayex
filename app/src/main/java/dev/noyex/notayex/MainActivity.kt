@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,27 +69,26 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.noyex.notayex.theme.ProjectNTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        val splashScreen = installSplashScreen()
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Hızlı başlangıç için UI'yi hemen göster
         setContent {
             ProjectNTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-                    val isFirstRun = sharedPreferences.getBoolean("isFirstRun", true)
-                    LoginScreen(
-                        isFirstRun = isFirstRun,
-                        onLoginSuccess = {
-                            val editor = sharedPreferences.edit()
-                            editor.putBoolean("isFirstRun", false)
-                            editor.apply()
-                        }
-                    )
+                    LoginScreen()
                 }
             }
         }
@@ -98,27 +99,98 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    isFirstRun: Boolean,
-    onLoginSuccess: () -> Unit,
     showDialog: Boolean = false
 ) {
     var passwordState by remember { mutableStateOf(TextFieldValue("")) }
+    var isLoading by remember { mutableStateOf(true) }
+    var isFirstRun by remember { mutableStateOf(true) }
+    var storedPassword by remember { mutableStateOf("") }
+
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val uriHandler = LocalUriHandler.current
-    var isSettingPassword by remember { mutableStateOf(isFirstRun) }
-    val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
-    val loginTitle = if (isSettingPassword) stringResource(R.string.set_password_title) else stringResource(
-        R.string.login_title)
-    val buttonText = if (isSettingPassword) stringResource(R.string.set_password_button) else stringResource(
-        R.string.login_button)
-    val scrollState = rememberScrollState()
     var openDialog by remember { mutableStateOf(showDialog) }
 
+    // Async olarak SharedPreferences yükle
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+            val firstRun = sharedPreferences.getBoolean("isFirstRun", true)
+            val password = sharedPreferences.getString("password", "") ?: ""
+
+            // Main thread'e dön ve state'leri güncelle
+            withContext(Dispatchers.Main) {
+                isFirstRun = firstRun
+                storedPassword = password
+                isLoading = false
+            }
+        }
+    }
+
+    // Loading durumunda basit bir loading göster
+    if (isLoading) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        return
+    }
+
+    val isSettingPassword = isFirstRun
+    val loginTitle = if (isSettingPassword) {
+        stringResource(R.string.set_password_title)
+    } else {
+        stringResource(R.string.login_title)
+    }
+    val buttonText = if (isSettingPassword) {
+        stringResource(R.string.set_password_button)
+    } else {
+        stringResource(R.string.login_button)
+    }
+    val scrollState = rememberScrollState()
+
     // Toast mesajları için string kaynakları
-    val passwordSetSuccess = context.getString(R.string.password_set_success)
-    val passwordEmptyError = context.getString(R.string.password_empty_error)
-    val passwordIncorrect = context.getString(R.string.password_incorrect)
+    val passwordSetSuccess = stringResource(R.string.password_set_success)
+    val passwordEmptyError = stringResource(R.string.password_empty_error)
+    val passwordIncorrect = stringResource(R.string.password_incorrect)
+
+    // Login işlemini optimize et
+    fun handleLogin() {
+        val activity = context as? Activity ?: return
+
+        if (isSettingPassword) {
+            if (passwordState.text.isNotEmpty()) {
+                // Background thread'de SharedPreferences güncelle
+                Thread {
+                    val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+                    val editor = sharedPreferences.edit()
+                    editor.putString("password", passwordState.text)
+                    editor.putBoolean("isFirstRun", false)
+                    editor.apply()
+                }.start()
+
+                Toast.makeText(context, passwordSetSuccess, Toast.LENGTH_SHORT).show()
+                // Ana sayfaya geç
+                context.startActivity(Intent(context, NotePageActivity::class.java))
+                activity.finish()
+            } else {
+                Toast.makeText(context, passwordEmptyError, Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            if (passwordState.text == storedPassword) {
+                context.startActivity(Intent(context, NotePageActivity::class.java))
+                activity.finish()
+            } else {
+                Toast.makeText(context, passwordIncorrect, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Box(
         modifier = modifier.background(MaterialTheme.colorScheme.background)
@@ -146,9 +218,7 @@ fun LoginScreen(
                             style = MaterialTheme.typography.headlineMedium,
                         )
                         IconButton(
-                            onClick = {
-                                openDialog = true
-                            }
+                            onClick = { openDialog = true }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Info,
@@ -189,32 +259,11 @@ fun LoginScreen(
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                         keyboardActions = KeyboardActions(
-                            onGo = {
-                                val activity = context as? Activity
-                                val storedPassword = sharedPreferences.getString("password", "")
-                                if (isSettingPassword) {
-                                    if (passwordState.text.isNotEmpty()) {
-                                        val editor = sharedPreferences.edit()
-                                        editor.putString("password", passwordState.text)
-                                        editor.apply()
-                                        isSettingPassword = false
-                                        onLoginSuccess()
-                                        Toast.makeText(context, passwordSetSuccess, Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, passwordEmptyError, Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    if (passwordState.text == storedPassword && activity != null) {
-                                        context.startActivity(Intent(context, NotePageActivity::class.java))
-                                    } else {
-                                        Toast.makeText(context, passwordIncorrect, Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            }
+                            onGo = { handleLogin() }
                         ),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                            unfocusedBorderColor =MaterialTheme.colorScheme.secondary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
                             cursorColor = MaterialTheme.colorScheme.secondary,
                             focusedLabelColor = MaterialTheme.colorScheme.secondary,
                             unfocusedLabelColor = MaterialTheme.colorScheme.secondary,
@@ -223,28 +272,7 @@ fun LoginScreen(
                         )
                     )
                     Button(
-                        onClick = {
-                            val activity = context as? Activity
-                            val storedPassword = sharedPreferences.getString("password", "")
-                            if (isSettingPassword) {
-                                if (passwordState.text.isNotEmpty()) {
-                                    val editor = sharedPreferences.edit()
-                                    editor.putString("password", passwordState.text)
-                                    editor.apply()
-                                    isSettingPassword = false
-                                    onLoginSuccess()
-                                    Toast.makeText(context, passwordSetSuccess, Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, passwordEmptyError, Toast.LENGTH_SHORT).show()
-                                }
-                            } else {
-                                if (passwordState.text == storedPassword && activity != null) {
-                                    context.startActivity(Intent(context, NotePageActivity::class.java))
-                                } else {
-                                    Toast.makeText(context, passwordIncorrect, Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        },
+                        onClick = { handleLogin() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(buttonText)
@@ -255,7 +283,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // hakkında sayfası alert dialogu
+        // About dialog
         if (openDialog) {
             AlertDialog(
                 onDismissRequest = { openDialog = false },
@@ -336,19 +364,19 @@ fun LoginScreen(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true,uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, showSystemUi = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun LoginScreenPreview() {
     ProjectNTheme {
-        LoginScreen(isFirstRun = true, onLoginSuccess = {})
+        LoginScreen()
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true,uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO)
+@Preview(showBackground = true, showSystemUi = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO)
 @Composable
 fun LoginScreenPreview2() {
     ProjectNTheme {
-        LoginScreen(isFirstRun = true, onLoginSuccess = {})
+        LoginScreen()
     }
 }
 
@@ -356,7 +384,7 @@ fun LoginScreenPreview2() {
 @Composable
 fun DialogDarkPreview() {
     ProjectNTheme {
-        LoginScreen(isFirstRun = true, onLoginSuccess = {}, showDialog = true)
+        LoginScreen(showDialog = true)
     }
 }
 
@@ -364,6 +392,6 @@ fun DialogDarkPreview() {
 @Composable
 fun DialogLightPreview() {
     ProjectNTheme {
-        LoginScreen(isFirstRun = true, onLoginSuccess = {}, showDialog = true)
+        LoginScreen(showDialog = true)
     }
 }
