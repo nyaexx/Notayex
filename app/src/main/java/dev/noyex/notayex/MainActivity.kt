@@ -71,17 +71,12 @@ import androidx.compose.ui.unit.dp
 import dev.noyex.notayex.theme.ProjectNTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-
-        val splashScreen = installSplashScreen()
-
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Hızlı başlangıç için UI'yi hemen göster
         setContent {
             ProjectNTheme {
                 Surface(
@@ -111,7 +106,6 @@ fun LoginScreen(
     val uriHandler = LocalUriHandler.current
     var openDialog by remember { mutableStateOf(showDialog) }
 
-    // Async olarak SharedPreferences yükle
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
@@ -127,7 +121,6 @@ fun LoginScreen(
         }
     }
 
-    // Loading durumunda basit bir loading göster
     if (isLoading) {
         Box(
             modifier = modifier
@@ -160,13 +153,11 @@ fun LoginScreen(
     val passwordEmptyError = stringResource(R.string.password_empty_error)
     val passwordIncorrect = stringResource(R.string.password_incorrect)
 
-    // Login işlemini optimize et
     fun handleLogin() {
         val activity = context as? Activity ?: return
 
         if (isSettingPassword) {
             if (passwordState.text.isNotEmpty()) {
-                // Background thread'de SharedPreferences güncelle
                 Thread {
                     val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
                     val editor = sharedPreferences.edit()
@@ -176,7 +167,7 @@ fun LoginScreen(
                 }.start()
 
                 Toast.makeText(context, passwordSetSuccess, Toast.LENGTH_SHORT).show()
-                // Ana sayfaya geç
+
                 context.startActivity(Intent(context, NotePageActivity::class.java))
                 activity.finish()
             } else {
@@ -283,7 +274,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // About dialog
+
         if (openDialog) {
             AlertDialog(
                 onDismissRequest = { openDialog = false },

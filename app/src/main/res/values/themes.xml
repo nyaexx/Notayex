@@ -1,35 +1,7 @@
-<!-- res/values/themes.xml -->
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.ProjectN" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-    </style>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
 
-    <!-- Splash Screen Theme - Light Mode -->
-    <style name="Theme.ProjectN.SplashScreen" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">?attr/colorSurface</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-        <item name="windowSplashScreenAnimationDuration">200</item>
-        <item name="postSplashScreenTheme">@style/Theme.ProjectN</item>
-    </style>
+    <style name="Theme.ProjectN" parent="android:Theme.Material.Light.NoActionBar" />
+        <item name="kutucuk" type="color">@color/black</item>
 
-    <style name="Theme.ProjectN" parent="Base.Theme.ProjectN" />
-</resources>
-
-    <!-- res/values-night/themes.xml -->
-<resources xmlns:tools="http://schemas.android.com/tools">
-<!-- Base application theme. -->
-<style name="Base.Theme.ProjectN" parent="Theme.Material3.DayNight.NoActionBar">
-    <!-- Customize your dark theme here. -->
-    <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
-</style>
-
-<!-- Splash Screen Theme - Dark Mode -->
-<style name="Theme.ProjectN.SplashScreen" parent="Theme.SplashScreen">
-    <item name="windowSplashScreenBackground">?attr/colorSurface</item>
-    <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-    <item name="windowSplashScreenAnimationDuration">200</item>
-    <item name="postSplashScreenTheme">@style/Theme.ProjectN</item>
-</style>
 </resources>
