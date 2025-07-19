@@ -255,7 +255,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // AlertDialog
+        // hakkında sayfası alert dialogu
         if (openDialog) {
             AlertDialog(
                 onDismissRequest = { openDialog = false },

@@ -22,10 +22,10 @@ private val DarkColorScheme = darkColorScheme(
     secondaryContainer = SecondaryContainer80,
     onSecondaryContainer = OnSecondaryContainer80,
 
-    tertiary = Test,
-    onTertiary = Test,
-    tertiaryContainer = Test,
-    onTertiaryContainer = Test,
+    tertiary = Tertiary80,
+    onTertiary = OnTertiary80,
+    tertiaryContainer = TertiaryContainer80,
+    onTertiaryContainer = OnTertiaryContainer80,
 
     error = Error80,
     onError = OnError80,
@@ -58,10 +58,10 @@ private val LightColorScheme = lightColorScheme(
     secondaryContainer = SecondaryContainer40,
     onSecondaryContainer = OnSecondaryContainer40,
 
-    tertiary = Test,
-    onTertiary = Test,
-    tertiaryContainer = Test,
-    onTertiaryContainer = Test,
+    tertiary = Tertiary40,
+    onTertiary = OnTertiary40,
+    tertiaryContainer = TertiaryContainer40,
+    onTertiaryContainer = OnTertiaryContainer40,
 
     error = Error40,
     onError = OnError40,
@@ -86,12 +86,10 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun ProjectNTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color Android 12+ cihazlarda otomatik olarak devreye girer
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        // Android 12+ ve dinamik renk aktifse sistem renklerini kullan
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) {
@@ -100,15 +98,13 @@ fun ProjectNTheme(
                 dynamicLightColorScheme(context)
             }
         }
-        // Karanlık tema
         darkTheme -> DarkColorScheme
-        // Açık tema
         else -> LightColorScheme
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography, // Typography'nizin tanımlı olduğundan emin olun
+        typography = Typography,
         content = content
     )
 }

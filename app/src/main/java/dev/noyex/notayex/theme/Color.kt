@@ -2,13 +2,12 @@ package dev.noyex.notayex.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light Theme Colors - Daha canlı ve modern renkler
+// Light Theme Colors
 val Primary40 = Color(0xFF6750A4)        // Deep Purple
 val OnPrimary40 = Color(0xFFFFFFFF)      // White
 val PrimaryContainer40 = Color(0xFFEADDFF) // Light Purple
 val OnPrimaryContainer40 = Color(0xFF21005D) // Dark Purple
 
-val Test = Color(0xFF000000) // Test color, can be removed later
 
 val Secondary40 = Color(0xFF625B71)       // Purple Grey
 val OnSecondary40 = Color(0xFFFFFFFF)     // White
@@ -20,7 +19,7 @@ val OnTertiary40 = Color(0xFFFFFFFF)      // White
 val TertiaryContainer40 = Color(0xFFFFD8E4) // Light Pink
 val OnTertiaryContainer40 = Color(0xFF31111D) // Dark Pink
 
-// Dark Theme Colors - Göze daha yumuşak renkler
+// Dark Theme Colors
 val Primary80 = Color(0xFFD0BCFF)         // Light Purple
 val OnPrimary80 = Color(0xFF381E72)       // Dark Purple
 val PrimaryContainer80 = Color(0xFF4F378B) // Medium Purple
