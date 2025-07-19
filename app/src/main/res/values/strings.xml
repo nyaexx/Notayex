@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Notayex</string>
+    <string name="login_title">Giriş Yapınız</string>
+    <string name="set_password_title">Şifre Belirleyin</string>
+    <string name="password_label">Şifre</string>
+    <string name="login_button">Giriş Yap</string>
+    <string name="set_password_button">Şifreyi Ayarla</string>
+    <string name="password_incorrect">Şifre Yanlış</string>
+    <string name="password_set_success">Şifre Ayarlandı</string>
+    <string name="password_empty_error">Şifre boş olamaz</string>
+    <string name="made_by">Made by Nyaex</string>
+    <string name="pref_is_first_run">isFirstRun</string>
+    <string name="pref_password">password</string>
+</resources>
